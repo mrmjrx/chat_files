@@ -69,8 +69,8 @@ def start():  # Takes in the ClientMainWindow so that it can be interacted with
 
                 if display_name_status != SUCCESS_PHRASE:
                     print(f"Error: {display_name_status}")
-                else:
-                    display_name = requested_display_name  # Set globally here so that it can be accessed by the UI
+
+        display_name = requested_display_name  # Set globally here so that it can be accessed by the UI
 
         messages.append("You have successfully connected")
 
@@ -96,7 +96,8 @@ def update_messages():
             client.send(message)
             msg_length = client.recv(HEADER).decode(FORMAT)  # Receives the length of the message list
             messages_raw = client.recv(int(msg_length)).decode(FORMAT)  # Receives the message list
-            messages = messages_raw.split(MESSAGE_SPLIT_CHARS)  # Splits the message list
+            messages += [n for n in messages_raw.split(MESSAGE_SPLIT_CHARS) if n not in messages]  # Splits received
+            # list and adds new messages to global list
             messages_formatted = style_text_browser(messages)  # Formatted for the PyQt TextBrowser
 
             sleep(1 / UPDATE_FREQ)  # Waits for frequency

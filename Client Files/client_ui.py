@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'client.ui'
+# Form implementation generated from reading ui file '/Development Files/client.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -15,42 +15,50 @@ import threading
 
 
 class ClientMainWindow(QtWidgets.QMainWindow):
+    """Class that serves the main window of the client UI"""
     def __init__(self):
         super().__init__()
+        self.config = style.load_ui_config()
+
         self.setObjectName("MainWindow")
         self.resize(800, 600)
         self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
+
         self.text_viewer = QtWidgets.QTextBrowser(self.centralwidget)
         self.text_viewer.setGeometry(QtCore.QRect(10, 0, 780, 500))
-        font = QtGui.QFont()
-        font.setFamily("JetBrains Mono")
-        font.setPointSize(16)
-        self.text_viewer.setFont(font)
         self.text_viewer.setObjectName("text_viewer")
         self.text_viewer.setHtml(style.style_text_browser(messages=["Server Text Here"]))
+
         self.text_entry = QtWidgets.QLineEdit(self.centralwidget)
         self.text_entry.setGeometry(QtCore.QRect(10, 510, 680, 30))
-        font = QtGui.QFont()
-        font.setFamily("JetBrains Mono")
-        font.setPointSize(16)
-        self.text_entry.setFont(font)
         self.text_entry.setText("")
         self.text_entry.setObjectName("text_entry")
+
         self.submit_button = QtWidgets.QPushButton(self.centralwidget)
         self.submit_button.setGeometry(QtCore.QRect(690, 510, 100, 30))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        self.submit_button.setFont(font)
         self.submit_button.setObjectName("submit_button")
+        self.submit_button.setDefault(True)
+
         self.connection_label = QtWidgets.QLabel(self.centralwidget)
         self.connection_label.setGeometry(QtCore.QRect(10, 540, 780, 15))
         self.connection_label.setObjectName("connection_label")
         self.setCentralWidget(self.centralwidget)
+
         self.menubar = QtWidgets.QMenuBar(self)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
         self.menubar.setObjectName("menubar")
+        self.menuSettings = QtWidgets.QMenu(self.menubar)
+        self.menuSettings.setObjectName("menuSettings")
+        self.menuSettings.setTitle("Settings")
         self.setMenuBar(self.menubar)
+        self.actionReload_UI_Styling = QtWidgets.QAction(self)
+        self.actionReload_UI_Styling.setObjectName("actionReload_UI_Styling")
+        self.menuSettings.addAction(self.actionReload_UI_Styling)
+        self.menubar.addAction(self.menuSettings.menuAction())
+        self.actionReload_UI_Styling.setText("Reload UI Styling")
+        self.actionReload_UI_Styling.triggered.connect(self.update_ui)
+
         self.statusbar = QtWidgets.QStatusBar(self)
         self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
@@ -62,27 +70,56 @@ class ClientMainWindow(QtWidgets.QMainWindow):
         self.submit_button.clicked.connect(self.send_message)
         self.update_connection_label()
 
+        self.update_ui()
+
+    def update_ui(self):
+        self.config = style.load_ui_config()
+        style_sheets = style.get_style_sheets(self.config)
+
+        font = QtGui.QFont()
+        font.setFamily(self.config['text_font'])
+        font.setPointSize(16)
+        self.text_viewer.setFont(font)
+        self.text_entry.setFont(font)
+
+        font = QtGui.QFont()
+        font.setFamily(self.config['ui_font'])
+        font.setPointSize(14)
+        self.submit_button.setFont(font)
+
+        self.setStyleSheet(style_sheets['primary_col'])
+        self.text_entry.setStyleSheet(style_sheets['secondary_col'])
+        self.text_viewer.setStyleSheet(style_sheets['secondary_col'])
+        self.submit_button.setStyleSheet(style_sheets['secondary_col'])
+
     def update_connection_label(self):
         self.connection_label.setText(f"Connected to {client.SERVER} as {client.display_name}")
 
     def send_message(self) -> str:
         client.send_message(self.text_entry.text())
+        self.text_entry.setText("")
 
     def update_text_browser(self, messages: list):
         self.text_viewer.setHtml(str(messages))
 
 
+def process_events():
+    while True:
+        app.processEvents()
+        ui_obj.update_text_browser(client.messages_formatted)
+        if not client.connected:
+            return 0
+
+
 if __name__ == '__main__':
+    global client, app, ui_obj
     import sys
     app = QtWidgets.QApplication(sys.argv)
+    app.aboutToQuit.connect(sys.exit)
     ui_obj = ClientMainWindow()
 
     client.start()
 
     ui_obj.show()
 
-    while True:
-        app.processEvents()
-        ui_obj.update_text_browser(client.messages_formatted)
-
-    sys.exit(app.exec())
+    sys.exit(process_events())  # Takes an integer

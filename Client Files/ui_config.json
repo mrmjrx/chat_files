@@ -1,0 +1,13 @@
+{
+  "bg_col": "black",
+  "text_font": "JetBrains Mono",
+  "ui_font": "Consolas",
+  "primary_col": {
+    "bg": "#23272a",
+    "text": "white"
+  },
+  "secondary_col": {
+    "bg": "#2c2f33",
+    "text": "white"
+  }
+}
