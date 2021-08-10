@@ -59,31 +59,30 @@ class ClientMainWindow(QtWidgets.QMainWindow):
         self.submit_button.setText("Submit")
         self.connection_label.setText("Connected to 255.255.255.255 as User")
 
-    def update_connection_label(self, server: str, display_name: str):
-        self.connection_label.setText(f"Connected to {server} as {display_name}")
+        self.submit_button.clicked.connect(self.send_message)
+        self.update_connection_label()
 
-    def get_text_entry(self) -> str:
-        return self.text_entry.text()
+    def update_connection_label(self):
+        self.connection_label.setText(f"Connected to {client.SERVER} as {client.display_name}")
+
+    def send_message(self) -> str:
+        client.send_message(self.text_entry.text())
 
     def update_text_browser(self, messages: list):
-        self.text_viewer.setHtml(style.style_text_browser(messages))
-
-
-def client_thread():
-    """Thread that handles client interactions"""
-    client.start()
-
-
-def manage_ui():
-    thread = threading.Thread(target=client_thread)
-    thread.start()
-
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    ui_obj = ClientMainWindow()
-    ui_obj.show()
-    sys.exit(app.exec_())
+        self.text_viewer.setHtml(str(messages))
 
 
 if __name__ == '__main__':
-    manage_ui()
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    ui_obj = ClientMainWindow()
+
+    client.start()
+
+    ui_obj.show()
+
+    while True:
+        app.processEvents()
+        ui_obj.update_text_browser(client.messages_formatted)
+
+    sys.exit(app.exec())

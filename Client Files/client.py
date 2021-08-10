@@ -5,7 +5,7 @@ Main script of handling the client-side of the chat app
 import socket
 import threading
 from time import sleep
-from client_ui import ClientMainWindow
+from client_ui_styling import style_text_browser
 
 HEADER = 64
 PORT = 5050
@@ -21,8 +21,10 @@ SUCCESS_PHRASE = "OK"
 
 client: socket.socket = None
 messages = []
+messages_formatted = ""
 connected = None
-ui_obj: ClientMainWindow = None
+display_name: str = ""
+
 
 def padd_msg_bytes(msg: str, pad_len: int):
     global FORMAT
@@ -41,12 +43,13 @@ def get_structured_message(str_message: str):
     return message, send_length
 
 
-def start():
-    global client, connected
+def start():  # Takes in the ClientMainWindow so that it can be interacted with
     """Thread that handles the input in the console"""
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    global client, connected, display_name
+
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Sets up the connection object
     try:
-        client.connect(ADDR)
+        client.connect(ADDR)  # Connects to the domain
     except ConnectionRefusedError:
         print("Error: could not connect to server")
         quit()
@@ -55,17 +58,19 @@ def start():
         quit()
 
     try:   # Wrapped in a try-catch so that, should the server close, the client doesn't produce an error code
-
         display_name_status = ""
         while display_name_status != SUCCESS_PHRASE:
             requested_display_name = input("Enter your display name: ")
-            if requested_display_name:
+            if requested_display_name:  # If requested_display_name is NOT empty
                 client.send(padd_msg_bytes(requested_display_name, HEADER))  # Sends to the server the display name
 
-                display_name_status = client.recv(HEADER).decode(FORMAT).strip()
+                display_name_status = client.recv(HEADER).decode(FORMAT).strip()  # Receives the response to the
+                # display name assignment (server-side)
 
                 if display_name_status != SUCCESS_PHRASE:
                     print(f"Error: {display_name_status}")
+                else:
+                    display_name = requested_display_name  # Set globally here so that it can be accessed by the UI
 
         messages.append("You have successfully connected")
 
@@ -83,18 +88,16 @@ def start():
 def update_messages():
     """Thread that handles the receiving of messages from the server"""
     try:
-        global connected, messages, ui_obj
+        global connected, messages, messages_formatted
         while connected:
-            if ui_obj:
-                send_length, message = get_structured_message("")  # Gets the formatted message of no text, which is considered
-                # by the server to be a request for up to date messages
-                client.send(send_length)
-                client.send(message)
-                msg_length = client.recv(HEADER).decode(FORMAT)  # Receives the length of the message list
-                messages_raw = client.recv(int(msg_length)).decode(FORMAT)  # Receives the message list
-                messages = messages_raw.split(MESSAGE_SPLIT_CHARS)  # Splits the message list
-
-                ui_obj.update_text_browser(messages)
+            send_length, message = get_structured_message("")  # Gets the formatted message of no text, which is
+            # considered by the server to be a request for up to date messages
+            client.send(send_length)
+            client.send(message)
+            msg_length = client.recv(HEADER).decode(FORMAT)  # Receives the length of the message list
+            messages_raw = client.recv(int(msg_length)).decode(FORMAT)  # Receives the message list
+            messages = messages_raw.split(MESSAGE_SPLIT_CHARS)  # Splits the message list
+            messages_formatted = style_text_browser(messages)  # Formatted for the PyQt TextBrowser
 
             sleep(1 / UPDATE_FREQ)  # Waits for frequency
     except ConnectionResetError:
@@ -120,6 +123,7 @@ def send_message(str_message: str):
 
         if str_message == DISCONNECT_MESSAGE:
             connected = False
+
 
 if __name__ == '__main__':
     start()

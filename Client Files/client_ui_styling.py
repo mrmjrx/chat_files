@@ -21,7 +21,7 @@ def style_text_browser(messages: list, style_start=TEXT_BROWSER_START, style_end
     for msg in [n.strip() for n in messages]:  # For every message in (stripped) messages
         name_text_segments = msg.split("]")  # Split by ] (this is to signal the end of the name section)
         if len(name_text_segments) != 1:  # If there is less than 2 entries in the list (meaning there was no ])
-            msg_text += f"{style_item_start}<b>{name_text_segments[0]}]</b>{name_text_segments[1].strip()}" \
+            msg_text += f"{style_item_start}<b>{name_text_segments[0]}]</b> {name_text_segments[1].strip()}" \
                         f"{style_item_end}\n"
         else:
             msg_text += f"{style_item_start}<b>{msg.strip()}"

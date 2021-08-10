@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Basic Chat App.iml" filepath="$PROJECT_DIR$/.idea/Basic Chat App.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../Intro to Sockets (Tutorial)/.idea/Intro to Sockets (Tutorial).iml" filepath="$PROJECT_DIR$/../Intro to Sockets (Tutorial)/.idea/Intro to Sockets (Tutorial).iml" />
     </modules>
   </component>
 </project>
